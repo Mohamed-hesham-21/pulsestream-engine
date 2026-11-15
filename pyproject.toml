@@ -1,0 +1,37 @@
+[project]
+name = "pulsestream-engine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Mohamed-hesham-21", email = "mohamedmaybe4u@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.163.1",
+    "grpcio>=1.85.1",
+    "grpcio-tools>=1.85.1",
+    "psycopg[binary]>=3.3.9",
+    "pydantic>=2.14.3",
+    "redis>=8.1.0",
+    "strawberry-graphql>=0.341.2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+pulsestream-engine = "pulsestream_engine:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

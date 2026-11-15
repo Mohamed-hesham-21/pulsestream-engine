@@ -1,0 +1,55 @@
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  pg-primary:
+    image: postgres:16
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pulsestream
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg-primary-data:/var/lib/postgresql/data
+      - ./infra/primary-init.sh:/docker-entrypoint-initdb.d/primary-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pulsestream"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pg-replica:
+    image: postgres:16
+    user: postgres
+    entrypoint: ["bash", "/replica-entrypoint.sh"]
+    environment:
+      PGPASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg-replica-data:/var/lib/postgresql/data
+      - ./infra/replica-entrypoint.sh:/replica-entrypoint.sh:ro
+    depends_on:
+      pg-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg-primary-data:
+  pg-replica-data:
